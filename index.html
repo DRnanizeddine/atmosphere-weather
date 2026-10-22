@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atmosphere - Real-Time Weather Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        weather: {
+                            blue: '#0284c7',
+                            dark: '#0f172a',
+                            card: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 min-h-screen transition-colors duration-200">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Header Navigation -->
+    <header class="border-b border-gray-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3 font-bold text-xl text-sky-600 dark:text-sky-400">
+                <i class="fa-solid fa-cloud-sun-rain text-2xl"></i>
+                <span>Atmosphere</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="unit-toggle" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition">
+                    °C / °F
+                </button>
+                <button id="theme-toggle" class="p-2.5 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition" title="Toggle Theme">
+                    <i class="fa-solid fa-moon text-gray-600 dark:hidden"></i>
+                    <i class="fa-solid fa-sun text-amber-400 hidden dark:block"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+        <!-- Search Bar & Controls -->
+        <section class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
+            <form id="search-form" class="flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="city-input" placeholder="Search city (e.g., Tokyo, London, Paris)..." 
+                        class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">
+                </div>
+                <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition shadow">
+                    <i class="fa-solid fa-search"></i> Search
+                </button>
+                <button type="button" id="geo-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition shadow" title="Use current location">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                </button>
+            </form>
+
+            <!-- Recent Searches -->
+            <div class="mt-4 flex items-center gap-2 flex-wrap text-xs">
+                <span class="text-gray-400 font-medium">Recent Searches:</span>
+                <div id="recent-cities" class="flex gap-2 flex-wrap">
+                    <!-- Dynamic Badges -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Current Weather Highlights Card -->
+        <section id="weather-card" class="bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-3xl p-6 md:p-10 shadow-xl relative overflow-hidden hidden">
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <h2 id="location-name" class="text-2xl md:text-3xl font-bold">City, Country</h2>
+                    </div>
+                    <p id="current-date" class="text-xs text-sky-100 opacity-80">Wednesday, 21 Oct</p>
+                    
+                    <div class="mt-6 flex items-baseline gap-4">
+                        <span id="current-temp" class="text-6xl md:text-7xl font-extrabold tracking-tight">24°C</span>
+                        <div>
+                            <p id="weather-desc" class="text-lg font-semibold capitalize">Sunny</p>
+                            <p id="feels-like" class="text-xs text-sky-100 opacity-90">Feels like 25°C</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center justify-center">
+                    <i id="weather-icon-large" class="fa-solid fa-sun text-7xl md:text-8xl text-amber-300 drop-shadow-md"></i>
+                </div>
+            </div>
+
+            <!-- Weather Details Grid -->
+            <div class="mt-8 pt-6 border-t border-white/20 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div class="p-3 rounded-2xl bg-white/10 backdrop-blur">
+                    <i class="fa-solid fa-droplet text-sky-200 mb-1"></i>
+                    <p class="text-xs text-sky-100">Humidity</p>
+                    <p id="detail-humidity" class="text-lg font-bold">65%</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-white/10 backdrop-blur">
+                    <i class="fa-solid fa-wind text-sky-200 mb-1"></i>
+                    <p class="text-xs text-sky-100">Wind Speed</p>
+                    <p id="detail-wind" class="text-lg font-bold">12 km/h</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-white/10 backdrop-blur">
+                    <i class="fa-solid fa-gauge-high text-sky-200 mb-1"></i>
+                    <p class="text-xs text-sky-100">Pressure</p>
+                    <p id="detail-pressure" class="text-lg font-bold">1013 hPa</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-white/10 backdrop-blur">
+                    <i class="fa-solid fa-eye text-sky-200 mb-1"></i>
+                    <p class="text-xs text-sky-100">Visibility</p>
+                    <p id="detail-visibility" class="text-lg font-bold">10 km</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5-Day Forecast -->
+        <section id="forecast-section" class="hidden space-y-4">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-calendar-days text-sky-500"></i> 5-Day Forecast
+            </h3>
+            <div id="forecast-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Forecast Cards Inserted Dynamically -->
+            </div>
+        </section>
+
+        <!-- Initial Placeholder State -->
+        <section id="placeholder-state" class="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-slate-700">
+            <i class="fa-solid fa-cloud-sun text-6xl text-sky-400 mb-4 animate-bounce"></i>
+            <h3 class="text-xl font-bold mb-2">Search for a City</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                Type a city name in the search bar above or use your current location to fetch real-time weather metrics and a 5-day forecast.
+            </p>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
