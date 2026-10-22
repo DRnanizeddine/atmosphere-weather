@@ -13,7 +13,7 @@ A responsive weather web application built with HTML5, Tailwind CSS, and Vanilla
 ## 🚀 Quick Start
 1. Clone repository:
    ```bash
-   git clone https://github.com/<your-username>/atmosphere-weather.git
+   git clone https://github.com/DRnanizeddine/atmosphere-weather.git
    ```
 2. Open `index.html` directly in your browser!
 
